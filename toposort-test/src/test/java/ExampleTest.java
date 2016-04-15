@@ -4,11 +4,13 @@ import com.google.inject.Injector;
 import cs.technion.ac.il.sd.External;
 import cs.technion.ac.il.sd.app.Toposort;
 import cs.technion.ac.il.sd.app.ToposortModule;
+import externalImpl.ExternalImpl;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
+import toposortImpl.ToposortImpl;
 
 import java.io.File;
 
@@ -27,7 +29,7 @@ public class ExampleTest {
   }
 
   @Rule
-  public Timeout globalTimeout = Timeout.seconds(10);
+  public Timeout globalTimeout = Timeout.seconds(500);
 
   @Test
   public void testSimple() {
@@ -48,7 +50,7 @@ public class ExampleTest {
   }
 
   @Test
-  public void largeTest() throws Exception {
+  public void testLarge() throws Exception {
     // This test is really slow due to the use of Mockito and inOrder in a list.
     // The real testing implementation will be much faster.
     processFile("large");
@@ -60,8 +62,21 @@ public class ExampleTest {
   }
 
   @Test
-  public void enormousTest() throws Exception {
-    
+  public void testEnormous() throws Exception {
+    processFile("enormous");
+    External mock = injector.getInstance(External.class);
+    InOrder inOrder = Mockito.inOrder(mock);
+    /*for (int i = 1; i <= 1000; i++) {
+        inOrder.verify(mock).process(i);
+    }*/
   }
 
+  @Test
+  public void testForest() throws Exception {
+    ToposortImpl t = new ToposortImpl(new ExternalImpl());
+      t.processFile(new File(getClass().getResource("forest_graph.txt").getFile()));
+    External mock = injector.getInstance(External.class);
+    InOrder inOrder = Mockito.inOrder(mock);
+
+  }
 }

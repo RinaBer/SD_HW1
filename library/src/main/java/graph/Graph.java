@@ -1,8 +1,6 @@
 package graph;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -11,9 +9,11 @@ import java.util.stream.Collectors;
 
 public class Graph {
     private HashSet<Node> vertexes;
+    private HashSet<Node> sources;
 
     public Graph(HashSet<Integer> vertexes, HashSet<Edge> edges){
         this.vertexes = new HashSet<Node>();
+        this.sources = new HashSet<Node>();
         for (Integer v : vertexes) {
             addVertex(v);
         }
@@ -24,7 +24,14 @@ public class Graph {
                 System.out.println(exp.getMessage());
             }
         }
+        initializeSources();
     }
+
+    private void initializeSources() {
+        sources.addAll(vertexes.stream().filter(v -> v.getInDegree() == 0).
+                collect(Collectors.toCollection(ArrayList<Node>::new)));
+    }
+
     private void addVertex(Integer v){
         Node node = new Node(v);
         vertexes.add(node);
@@ -42,14 +49,23 @@ public class Graph {
 
     public void removeVertex(Node node){
         List<Integer> list = node.getNeighbors();
-        vertexes = vertexes.stream().map(v-> {if(list.contains(v.getVertexID())) v.decInDegree(); return v;}).
-                collect(Collectors.toCollection(HashSet<Node>::new));
+        sources.remove(node);
+        vertexes = vertexes.stream().map(v-> {
+            if(list.contains(v.getVertexID())) {
+                v.decInDegree();
+                if (v.getInDegree() == 0)
+                    sources.add(v);
+            }
+            return v;
+        }).collect(Collectors.toCollection(HashSet<Node>::new));
         vertexes.remove(node);
     }
 
     public Optional<Node> getSource(){
-        Optional<Node> s = vertexes.stream().filter(node->node.getInDegree() == 0).findFirst();
-        return s;
+        if (sources.isEmpty()){
+            return Optional.empty();
+        }
+        return Optional.of(this.sources.iterator().next());
     }
 
     public Boolean isEmpty(){
